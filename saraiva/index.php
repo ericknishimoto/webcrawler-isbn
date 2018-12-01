@@ -21,6 +21,12 @@ $cont = 0;
 //Pra cada ISBN da lista faça
 foreach ($listaIsbn as $isbn) {
 
+	//Caso pare no meio da array, para continuar
+	if ($cont < 16119) {
+		$cont++;
+		continue;
+	}
+	
 	//ISBN
 	var_dump($isbn['isbn']);
 	
@@ -78,6 +84,9 @@ foreach ($listaIsbn as $isbn) {
 		flush();
 		sleep(0.1);
 	}
+
+	$html->clear();
+	unset($html);
 }
 
 echo "FINALIZADO";
