@@ -71,17 +71,6 @@ foreach ($listaIsbn as $isbn) {
 
 	} else { //Não localizado valor entao...
 
-		//Não localizado
-		$valor = 0;
-
-		//Insere no BD
-		insereValor($conexao, $isbn['isbn'], $valor);
-
-		?>
-		<!-- Mostra valor encontrado -->
-		<p>R$ <?= $valor ?></p>
-		<?php
-
 		//Incrementa contagem de requisições
 		$cont++;
 	
