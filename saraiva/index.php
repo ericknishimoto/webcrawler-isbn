@@ -23,35 +23,35 @@ foreach ($listaIsbn as $isbn) {
 
 	//ISBN
 	var_dump($isbn['isbn']);
-
-	$html = file_get_html("https://www.livrariacultura.com.br/busca?N=0&Ntt=" . $isbn['isbn']); //URL do site
 	
-	//Se localizar div de produto não encontrado or NÃO localiza div de produto encontrado...
-	if ($html->find('div[class=product-ev-unavailable]') or !$html->find('div[class=price-big-ev]')) {
+	//Request com busca da ISBN
+	$html = file_get_html("https://busca.saraiva.com.br/busca?q=".$isbn['isbn']); //URL do site
+	?>
+
+	<!-- Mostra o nº de identf. da request -->
+	<p><span><?= $cont ?></span> - <?= $isbn['isbn'] ?></p>
+	
+	<?php
+
+	//Se NÃO localizar div de produto não encontrado E localizar div que contém o preço...
+	if (!$search = $html->find('div[class=nm-not-found-container]') && $search2 = $html->find('div[class=nm-price-value]')) {
 		
-		?>
-		<!-- Mostra valor encontrado -->
-		<p><span><?= $cont ?></span> - Não Localizado</p>
-		<?php
+		//Busca a li que contém o preço
+		$search = $html->find('li[class=nm-product-item]',0);
+		//Captura a SKU do produto
+		$sku = $search->getAttribute('data-pid');
 
-		//Incrementa contagem de requisições
-		$cont++;
-	
-		//Sleep para mostrar echo em tempo real
-		flush();
-		sleep(0.1);
+		//Captura o JSON da api referente a SKU
+		$json = file_get_contents("https://api.saraiva.com.br/sc/produto/pdp/$sku/0/0/1/");
 
-	//Senão se localizar div de produto localizado...
-	} else {
+		//Decoda o JSON
+		$decodedData = json_decode($json);
 
-		//Busca a div com preço e guarda
-		$valor = $html->find('div[class=price-big-ev]',0)->plaintext;
-		$valor = str_replace('R$', '', $valor); // remove spaces
-		$valor = str_replace(' ', '', $valor); // remove spaces
-		echo $valor;
+		//Extrai o preço do JSON
+		$string_number = $decodedData->price_block->price->final;	
 
 		//Transforma vírgulas em pontos, para o MySql
-		$valor = floatval(str_replace(',', '.', str_replace('.', '', $valor)));
+		$valor = floatval(str_replace(',', '.', str_replace('.', '', $string_number)));
 
 		//Insere no BD
 		insereValor($conexao, $isbn['isbn'], $valor);
@@ -68,8 +68,27 @@ foreach ($listaIsbn as $isbn) {
 		//Sleep para mostrar echo em tempo real
 		flush();
 		sleep(0.1);
-	}
 
+	} else { //Não localizado valor entao...
+
+		//Não localizado
+		$valor = 0;
+
+		//Insere no BD
+		insereValor($conexao, $isbn['isbn'], $valor);
+
+		?>
+		<!-- Mostra valor encontrado -->
+		<p>R$ <?= $valor ?></p>
+		<?php
+
+		//Incrementa contagem de requisições
+		$cont++;
+	
+		//Sleep para mostrar echo em tempo real
+		flush();
+		sleep(0.1);
+	}
 }
 
 echo "FINALIZADO";
@@ -81,13 +100,13 @@ function listaIsbn($conexao) {
 	while ($isbn = mysqli_fetch_assoc($resultado)) {
 		array_push($listaIsbn, $isbn);
 	}
-	
+
 	return $listaIsbn;
 }
 
 function insereValor ($conexao, $isbn, $valor) { 
 	$query = "UPDATE `isbn` set
-    cultura = '{$valor}'
+    saraiva = '{$valor}'
     where ISBN = '{$isbn}'
 	";
 
