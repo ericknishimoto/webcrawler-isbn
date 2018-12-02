@@ -22,13 +22,17 @@ $cont = 0;
 foreach ($listaIsbn as $isbn) {
 
 	//Caso pare no meio da array, para continuar
-	if ($cont < 16119) {
+	if ($cont < 21107) {
 		$cont++;
 		continue;
 	}
 	
 	//ISBN
 	var_dump($isbn['isbn']);
+	if (!$isbn['isbn']) {
+		$cont++;
+		continue;
+	}
 	
 	//Request com busca da ISBN
 	$html = file_get_html("https://busca.saraiva.com.br/busca?q=".$isbn['isbn']); //URL do site
@@ -45,6 +49,8 @@ foreach ($listaIsbn as $isbn) {
 		//Busca a li que contém o preço
 		$search = $html->find('li[class=nm-product-item]',0);
 		//Captura a SKU do produto
+		
+
 		$sku = $search->getAttribute('data-pid');
 
 		//Captura o JSON da api referente a SKU

@@ -21,6 +21,12 @@ $cont = 0;
 //Pra cada ISBN da lista faça
 foreach ($listaIsbn as $isbn) {
 
+	//Caso pare no meio da array, para continuar
+	if ($cont < 21107) {
+		$cont++;
+		continue;
+	}
+
 	//ISBN
 	var_dump($isbn['isbn']);
 
